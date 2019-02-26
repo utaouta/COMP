@@ -1,0 +1,138 @@
+{
+  "log": {
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "protocol": "socks",
+      "port": 1080,
+      "listen": "127.0.0.1",
+      "settings": {
+        "auth": "noauth",
+        "udp": true,
+        "ip": "127.0.0.1"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    },
+    {
+      "protocol": "http",
+      "port": 1081,
+      "listen": "127.0.0.1",
+      "settings": {}
+    },
+    {
+      "protocol": "dokodemo-door",
+      "port": 1082,
+      "listen": "0.0.0.0",
+      "settings": {
+        "network": "tcp,udp",
+        "timeout": 30,
+        "followRedirect": true
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "route-cn",
+      "protocol": "vmess",
+      "mux": {
+        "enabled": true,
+        "concurrency": 8
+      },
+      "settings": {
+        "vnext": [
+          {
+            "address": "transfer.asdasd.page",
+            "port": 443,
+            "users": [
+              {
+                "id": "77e5250c-7a12-11e8-adc0-fa7ae01bbebc",
+                "alterId": 16,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "h2",
+        "security": "tls",
+        "httpSettings": {
+          "host": [
+            "transfer.asdasd.page"
+          ],
+         "path": "/wp-content/uploads/"
+        }
+      }
+    },
+    {
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "settings": {},
+      "tag": "block"
+    }
+  ],
+  "routing": {
+    "strategy": "rules",
+    "settings": {
+      "domainStrategy": "AsIs",
+      "rules": [
+        {
+          "type": "field",
+          "domain": [
+            "geosite:cn",
+            "domain:bilibili.com",
+            "domain:163.com"
+          ],
+          "outboundTag": "route-cn"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "geoip:cn"
+          ],
+          "outboundTag": "route-cn"
+        },
+        {
+          "type": "field",
+          "port": 53,
+          "network": "udp",
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "domain:blockedsite.com"
+          ],
+          "outboundTag": "block"
+        },
+        {
+          "type": "field",
+          "domain": [
+            "geosite:speedtest",
+            "domain:pornhub.com",
+            "domain:xvideos.com"
+          ],
+          "outboundTag": "direct"
+        },
+        {
+          "type": "field",
+          "ip": [
+            "geoip:private"
+          ],
+          "outboundTag": "direct"
+        }
+      ]
+    }
+  }
+}
